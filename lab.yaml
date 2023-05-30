@@ -147,6 +147,9 @@ Outputs:
       Ref: LabEKSCluster
 
 # TODO
+# ~~~ need to create internet gateways, route tables, and all that jazz (why node group fails)
+#
+#
 # 1. NodeGroup commented fields
 # 2. Public IPs for nodes (probably in subnet config)
 # 3. ssh keys for Nodes
