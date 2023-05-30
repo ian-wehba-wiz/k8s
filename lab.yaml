@@ -12,7 +12,7 @@ Resources:
         - Key: controller
           Value: CloudFormation
 
-  PublicSubnetA:
+  LabPublicSubnetA:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId:
@@ -25,7 +25,7 @@ Resources:
       - Key: controller
         Value: CloudFormation
 
-  PublicSubnetB:
+  LabPublicSubnetB:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId:
@@ -38,4 +38,95 @@ Resources:
       - Key: controller
         Value: CloudFormation
 
-  
+  LabSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security Group for Lab Environment
+      VpcId:
+        Ref: LabVPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 204.48.37.221/32
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+
+  LabEKSCluster:
+    Type: AWS::EKS::Cluster
+    Properties:
+      Name: lab
+      ResourcesVpcConfig:
+          SecurityGroupIds:
+            - Ref: 
+                LabSecurityGroup
+          SubnetIds:
+            - Ref: 
+                LabPublicSubnetA
+            - Ref: 
+                LabPublicSubnetB
+          EndpointPublicAccess: true
+          EndpointPrivateAccess: false
+          PublicAccessCidrs: [ "204.48.37.221/32" ]
+      RoleArn: !GetAtt LabClusterIAMRole.Arn
+      Tags:
+        - Key: env
+          Value: lab
+        - Key: controller
+          Value: CloudFormation
+
+  LabClusterIAMRole:
+    Type: AWS::IAM::Role
+    Properties: 
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - eks.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonEKSClusterPolicy
+      RoleName: eksClusterRole
+
+  LabNodeGroupIAMRole:
+    Type: AWS::IAM::Role
+    Properties: 
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - ec2.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy
+        - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
+        - arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy
+      RoleName: eksNodeGroupRole
+
+  LabNodeGroup:
+    Type: 'AWS::EKS::Nodegroup'
+    Properties:
+      ClusterName: 
+        Ref:
+          LabEKSCluster
+      NodeRole: !GetAtt LabNodeGroupIAMRole.Arn
+      ScalingConfig:
+        MinSize: 2
+        DesiredSize: 2
+        MaxSize: 2
+      Subnets:
+        - Ref:
+          LabPublicSubnetA
+      Tags:
+        - Key: env
+          Value: lab
+        - Key: controller
+          Value: CloudFormation
