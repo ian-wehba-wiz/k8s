@@ -127,7 +127,7 @@ Resources:
       #ReleaseVersion: String
       #InstanceTypes: List of Strings
       #DiskSize: Integer
-      # RemoteAccess: RemoteAccess
+      #RemoteAccess: RemoteAccess
       Subnets:
         - Ref:
             LabPublicSubnetA
