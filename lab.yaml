@@ -124,9 +124,7 @@ Resources:
         MaxSize: 2
       Subnets:
         - Ref:
-          LabPublicSubnetA
+            LabPublicSubnetA
       Tags:
-        - Key: env
-          Value: lab
-        - Key: controller
-          Value: CloudFormation
+        env: lab
+        controller: CloudFormation
