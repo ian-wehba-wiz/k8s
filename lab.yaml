@@ -1,0 +1,41 @@
+Resources:
+  LabVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsHostnames: 'true'
+      EnableDnsSupport: 'true'
+      InstanceTenancy: default
+      Tags: 
+        - Key: env
+          Value: lab
+        - Key: controller
+          Value: CloudFormation
+
+  PublicSubnetA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId:
+        Ref: LabVPC
+      CidrBlock: 10.0.0.0/24
+      AvailabilityZone: !Select [0, !GetAZs us-east-1]
+      Tags:
+      - Key: env
+        Value: lab
+      - Key: controller
+        Value: CloudFormation
+
+  PublicSubnetB:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId:
+        Ref: LabVPC
+      CidrBlock: 10.0.1.0/24
+      AvailabilityZone: !Select [1, !GetAZs us-east-1]
+      Tags:
+      - Key: env
+        Value: lab
+      - Key: controller
+        Value: CloudFormation
+
+  
