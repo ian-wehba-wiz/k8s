@@ -1,7 +1,15 @@
 Parameters:
   LabSSHKey:
     Type: AWS::EC2::KeyPair::KeyName
-    Description: An existing keypair to use to SSH into Lab nodes.
+    Description: Choose an existing keypair to use to SSH into Lab nodes.
+  
+  NodeInstanceType:
+    Type: String
+    Default: t2.micro
+    AllowedValues:
+      - t2.micro
+      - t3.medium
+    Description: Choose an EC2 instance type for Lab nodes.
 
 Resources:
   LabVPC:
@@ -96,6 +104,22 @@ Resources:
       RouteTableId:
         Ref: LabRouteTable
 
+  LabPublicSubnetARouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId:
+        Ref: LabPublicSubnetA
+      RouteTableId:
+        Ref: LabRouteTable
+
+  LabPublicSubnetBRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId:
+        Ref: LabPublicSubnetB
+      RouteTableId:
+        Ref: LabRouteTable
+
   LabSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -120,7 +144,8 @@ Resources:
     Type: AWS::EC2::Instance
     Properties: 
       ImageId: ami-0715c1897453cabd1
-      InstanceType: t2.micro
+      InstanceType: 
+        Ref: NodeInstanceType
       KeyName: 
         Ref: LabSSHKey
       NetworkInterfaces: 
@@ -130,8 +155,6 @@ Resources:
             - Ref: LabSecurityGroup
           SubnetId: 
             Ref: LabPublicSubnetA
-      UserData: 
-        Fn::Base64: IyEvYmluL2Jhc2gKY3VybCBpY2FuaGF6aXAuY29tID4+IGlwLnR4dA==
       Tags:
         - Key: env
           Value: lab
@@ -140,5 +163,77 @@ Resources:
         - Key: node
           Value: 1
 
-#Outputs:
-#self-hosted-k8s-run1
+  LabNode2: 
+    Type: AWS::EC2::Instance
+    Properties: 
+      ImageId: ami-0715c1897453cabd1
+      InstanceType: 
+        Ref: NodeInstanceType
+      KeyName: 
+        Ref: LabSSHKey
+      NetworkInterfaces: 
+        - AssociatePublicIpAddress: 'true'
+          DeviceIndex: '0'
+          GroupSet: 
+            - Ref: LabSecurityGroup
+          SubnetId: 
+            Ref: LabPublicSubnetA
+      Tags:
+        - Key: env
+          Value: lab
+        - Key: controller
+          Value: CloudFormation
+        - Key: node
+          Value: 2
+
+  LabNode3: 
+    Type: AWS::EC2::Instance
+    Properties: 
+      ImageId: ami-0715c1897453cabd1
+      InstanceType: 
+        Ref: NodeInstanceType
+      KeyName: 
+        Ref: LabSSHKey
+      NetworkInterfaces: 
+        - AssociatePublicIpAddress: 'true'
+          DeviceIndex: '0'
+          GroupSet: 
+            - Ref: LabSecurityGroup
+          SubnetId: 
+            Ref: LabPublicSubnetB
+      Tags:
+        - Key: env
+          Value: lab
+        - Key: controller
+          Value: CloudFormation
+        - Key: node
+          Value: 3
+
+  LabNode4: 
+    Type: AWS::EC2::Instance
+    Properties: 
+      ImageId: ami-0715c1897453cabd1
+      InstanceType: 
+        Ref: NodeInstanceType
+      KeyName: 
+        Ref: LabSSHKey
+      NetworkInterfaces: 
+        - AssociatePublicIpAddress: 'true'
+          DeviceIndex: '0'
+          GroupSet: 
+            - Ref: LabSecurityGroup
+          SubnetId: 
+            Ref: LabPublicSubnetB
+      Tags:
+        - Key: env
+          Value: lab
+        - Key: controller
+          Value: CloudFormation
+        - Key: node
+          Value: 4
+
+Outputs:
+  LabSSHKey:
+    Description: Existing keypair to use to SSH into Lab nodes.
+    Value:
+      Ref: LabSSHKey
