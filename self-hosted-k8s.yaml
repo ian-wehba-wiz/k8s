@@ -1,0 +1,144 @@
+Parameters:
+  LabSSHKey:
+    Type: AWS::EC2::KeyPair::KeyName
+    Description: An existing keypair to use to SSH into Lab nodes.
+
+Resources:
+  LabVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsHostnames: 'true'
+      EnableDnsSupport: 'true'
+      InstanceTenancy: default
+      Tags: 
+        - Key: env
+          Value: lab
+        - Key: controller
+          Value: CloudFormation
+
+  LabS3GatewayEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: '*'
+            Action:
+              - 's3:*'
+            Resource:
+              - 'arn:aws:s3:::*'
+      ServiceName: com.amazonaws.us-east-1.s3
+      VpcId: 
+        Ref: LabVPC
+
+  LabPublicSubnetA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId:
+        Ref: LabVPC
+      CidrBlock: 10.0.0.0/24
+      AvailabilityZone: !Select [0, !GetAZs us-east-1]
+      Tags:
+      - Key: env
+        Value: lab
+      - Key: controller
+        Value: CloudFormation
+
+  LabPublicSubnetB:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId:
+        Ref: LabVPC
+      CidrBlock: 10.0.1.0/24
+      AvailabilityZone: !Select [1, !GetAZs us-east-1]
+      Tags:
+      - Key: env
+        Value: lab
+      - Key: controller
+        Value: CloudFormation
+
+  LabInternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+      - Key: env
+        Value: lab
+      - Key: controller
+        Value: CloudFormation
+
+  LabAttachInternetGateway:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId:
+        Ref: LabVPC
+      InternetGatewayId:
+        Ref: LabInternetGateway
+
+  LabRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties: 
+      VpcId:
+        Ref: LabVPC
+      Tags:
+      - Key: env
+        Value: lab
+      - Key: controller
+        Value: CloudFormation
+
+  LabRouteToInternetGateway:
+    Type: AWS::EC2::Route
+    Properties: 
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: 
+        Ref: LabInternetGateway
+      RouteTableId:
+        Ref: LabRouteTable
+
+  LabSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security Group for Lab Environment
+      VpcId:
+        Ref: LabVPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 204.48.37.221/32
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 76.100.181.129/32
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+
+  LabNode1: 
+    Type: AWS::EC2::Instance
+    Properties: 
+      ImageId: ami-0715c1897453cabd1
+      InstanceType: t2.micro
+      KeyName: 
+        Ref: LabSSHKey
+      NetworkInterfaces: 
+        - AssociatePublicIpAddress: 'true'
+          DeviceIndex: '0'
+          GroupSet: 
+            - Ref: LabSecurityGroup
+          SubnetId: 
+            Ref: LabPublicSubnetA
+      UserData: 
+        Fn::Base64: IyEvYmluL2Jhc2gKY3VybCBpY2FuaGF6aXAuY29tID4+IGlwLnR4dA==
+      Tags:
+        - Key: env
+          Value: lab
+        - Key: controller
+          Value: CloudFormation
+        - Key: node
+          Value: 1
+
+#Outputs:
+#self-hosted-k8s-run1
