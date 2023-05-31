@@ -156,12 +156,12 @@ Resources:
           SubnetId: 
             Ref: LabPublicSubnetA
       Tags:
+        - Key: Name
+          Value: node-1
         - Key: env
           Value: lab
         - Key: controller
           Value: CloudFormation
-        - Key: node
-          Value: 1
 
   LabNode2: 
     Type: AWS::EC2::Instance
@@ -179,12 +179,12 @@ Resources:
           SubnetId: 
             Ref: LabPublicSubnetA
       Tags:
+        - Key: Name
+          Value: node-2
         - Key: env
           Value: lab
         - Key: controller
           Value: CloudFormation
-        - Key: node
-          Value: 2
 
   LabNode3: 
     Type: AWS::EC2::Instance
@@ -202,12 +202,12 @@ Resources:
           SubnetId: 
             Ref: LabPublicSubnetB
       Tags:
+        - Key: Name
+          Value: node-3
         - Key: env
           Value: lab
         - Key: controller
           Value: CloudFormation
-        - Key: node
-          Value: 3
 
   LabNode4: 
     Type: AWS::EC2::Instance
@@ -225,12 +225,12 @@ Resources:
           SubnetId: 
             Ref: LabPublicSubnetB
       Tags:
+        - Key: Name
+          Value: node-4
         - Key: env
           Value: lab
         - Key: controller
           Value: CloudFormation
-        - Key: node
-          Value: 4
 
 Outputs:
   LabSSHKey:
