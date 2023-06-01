@@ -1,0 +1,116 @@
+Parameters:
+  Region:
+    Type: String
+    Default: us-east-1
+    AllowedValues:
+      - us-east-1
+      - us-east-2
+      - us-west-1
+      - us-west-2
+
+Resources:
+  FetcherLambda:
+    Type: AWS::Lambda::Function
+    Properties: 
+      FunctionName: Fetcher
+      Description: Pull data from REST API, process data, push processed data to S3
+      Architectures: 
+        - x86_64
+      Code: 
+          ImageUri: public.ecr.aws/docker/library/busybox:latest # I will put my image(s) in a public ECR registry
+      MemorySize: 128 # in MB [128, 10240]
+      PackageType: Image # Image | Zip
+      Timeout: 180 # in seconds [1, 900]
+      Role: 
+        Ref: FetcherLambdaRole
+      #DeadLetterConfig: 
+        #DeadLetterConfig
+      #Environment:
+        #Variables:
+          #databaseName: lambdadb
+          #databaseUser: admin
+      #EphemeralStorage: 
+          #Size: Integer # default is 512 MB which should be plenty
+      #FileSystemConfigs: # Connection settings for an Amazon EFS file system
+        #- Arn: String 
+          #LocalMountPath: String
+      #Handler: String # https://docs.aws.amazon.com/lambda/latest/dg/rust-handler.html
+      #ImageConfig: # Configuration values that override the container image Dockerfile settings
+          #Command: 
+            #- String
+          #EntryPoint: 
+            #- String
+          #WorkingDirectory: String
+      #Layers: # only with Lambda functions deployed as a .zip file archive
+        #- String
+      #Runtime: String # Runtime is required if the deployment package is a .zip
+
+  FetcherLambdaUrl:
+    Type: AWS::Lambda::Url
+    Properties: 
+      AuthType: AWS_IAM
+      Qualifier: String
+      TargetFunctionArn: !GetAtt FetcherLambda.Arn
+
+  FetcherLambdaRole:
+    Type: AWS::IAM::Role
+    Properties: 
+      RoleName: FetcherLambdaRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      ManagedPolicyArns: 
+        - arn:aws:iam::aws:policy/AmazonS3FullAccess
+
+  OutputBucketFetcherLambda:
+    Type: AWS::S3::Bucket
+    Properties: 
+      BucketName: Fetcher Output
+      AccelerateConfiguration: 
+        AccelerateConfiguration
+      AccessControl: String
+      AnalyticsConfigurations: 
+        - AnalyticsConfiguration
+      BucketEncryption: 
+        BucketEncryption
+      CorsConfiguration: 
+        CorsConfiguration
+      IntelligentTieringConfigurations: 
+        - IntelligentTieringConfiguration
+      InventoryConfigurations: 
+        - InventoryConfiguration
+      LifecycleConfiguration: 
+        LifecycleConfiguration
+      LoggingConfiguration: 
+        LoggingConfiguration
+      MetricsConfigurations: 
+        - MetricsConfiguration
+      NotificationConfiguration: 
+        NotificationConfiguration
+      ObjectLockConfiguration: 
+        ObjectLockConfiguration
+      ObjectLockEnabled: Boolean
+      OwnershipControls: 
+        OwnershipControls
+      PublicAccessBlockConfiguration: 
+        PublicAccessBlockConfiguration
+      ReplicationConfiguration: 
+        ReplicationConfiguration
+      VersioningConfiguration: 
+        VersioningConfiguration
+      WebsiteConfiguration: 
+        WebsiteConfiguration
+
+Outputs:
+  FetcherLambdaUrl:
+    Description: Public URL to invoke Fetcher Lambda
+    Value: !GetAtt FetcherLambdaUrl.FunctionUrl
+
+# Setup VPC with S3 endpoint
+# Setup DeadLetter config and some other options for Lambda when more is known about function code
